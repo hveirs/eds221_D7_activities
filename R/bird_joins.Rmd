@@ -1,0 +1,84 @@
+---
+title: "Bird joins"
+author: "Hailey Veirs"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE, warning=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(janitor)
+library(here)
+library(lubridate)
+```
+
+## Task 1
+
+```{r}
+# Read in the data
+bird_observations <- read_csv(here::here("data", "knb-lter-cap.256.9", 
+                                         "52_pp52_birds_1.csv")) 
+sites <- read_csv(here::here("data", "knb-lter-cap.256.9", 
+                             "52_pp52_sites_1.csv"))
+  
+surveys <- read_csv(here::here("data", "knb-lter-cap.256.9", 
+                             "52_pp52_surveys_1.csv"))
+  
+taxalist <- read_csv(here::here("data", "knb-lter-cap.256.9", 
+                                "52_pp52_taxalist_1.csv")) 
+
+# birds subset
+birds_subset <- bird_observations |>
+  filter(species_id %in% c("BHCO", "RWBL"), 
+         site_id %in% c("LI-W", "NU-C"))
+```
+
+### Left joins
+
+```{r}
+birds_left <- birds_subset |> 
+  left_join(x = birds_subset, y = sites, by = "site_id") |>
+  left_join(x = birds_left, y = taxalist, by = "species_id")
+
+```
+
+### Full join 
+
+```{r}
+birds_full <- birds_subset |> 
+  full_join(y = sites, by = "site_id")
+```
+
+### Inner join
+
+```{r}
+birds_inner <- inner_join(birds_subset, taxalist, by = "species_id")
+
+birds_left2 <- left_join(birds_subset, taxalist, by = "species_id")
+```
+
+## Task 2 
+
+```{r}
+bird_obs_notechng <- bird_observations |> 
+  rename(birds_obs_notes = notes)
+
+birds_sub2 <- bird_obs_notechng |> 
+  full_join(y = taxalist, by = "species_id") |> 
+  full_join(y = sites, by = "site_id") |> 
+  full_join(y = surveys, by = "survey_id") |>
+  select(survey_date, common_name, park_name, bird_count) |> 
+  mutate(survey_month = lubridate::month(survey_date)) |> 
+  mutate(survey_month = as.factor(survey_month)) |> 
+  dplyr::relocate(survey_month, .after = survey_date) |> 
+  filter(park_name %in% c("Lindo", "Orme", "Palomino", "Sonrisa"))
+  
+unique(birds_sub2$park_name)
+```
+
+
+survey_date, common_name, park_name, and bird_count
+“Lindo”, “Orme”, “Palomino” and “Sonrisa”
+
+
